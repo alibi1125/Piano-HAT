@@ -76,7 +76,7 @@ class PianoMode:
         for x in range(16):
             pianohat.set_led(x, False)
         pianohat.auto_leds(self.auto_led)
-        
+
     def handle_note(channel, pressed):
         pass
 
@@ -89,8 +89,8 @@ class PianoMode:
 
 class SimplePianoMode(PianoMode):
     auto_led = True
-    
-    def __init__(name="Piano", starting_octave=len(octaves)/2):
+
+    def __init__(self, name="Piano", starting_octave=octaves/2):
         self.name = name
         if starting_octave >= 0 and starting_octave < octaves:
             self.octave = starting_octave
@@ -98,18 +98,18 @@ class SimplePianoMode(PianoMode):
             print("Impossible starting octave. Initializing with 0.")
             self.octave = 0
 
-    def handle_note(channel, pressed):
+    def handle_note(self, channel, pressed):
         note_index = channel + (12 * self.octave) + NOTE_OFFSET
         if note_index >= 0 and note_index < len(samples) and pressed:
             print('Playing Sound {}'.format(files[note_index]))
             samples[note_index].play(loops=0)
 
-    def handle_octave_up(channel, pressed):
+    def handle_octave_up(self, channel, pressed):
         if pressed and self.octave < octaves:
             self.octave += 1
             print('Selected Octave {}'.format(octave))
 
-    def handle_octave_down(channel, pressed):
+    def handle_octave_down(self, channel, pressed):
         if pressed and self.octave > 0:
             self.octave -= 1
             print('Selected Octave {}'.format(octave))
@@ -118,22 +118,22 @@ class SimplePianoMode(PianoMode):
 class MelodyMode(PianoMode):
     auto_led = False
     fadein = 1000
-    
-    def __init__(name="Melody", melody='alle_meine_entchen',
+
+    def __init__(self, name="Melody", melody='alle_meine_entchen',
                  easter_egg=None, octave=4, transpose=0):
         self.name = name
-        self.melody = melodies['melody']
+        self.melody = melodies[melody]
         self.play_on_success = easter_egg
         # use 'octave' to bring the samples to a reasonable range and
         # use 'transpose' to transpose as necessary.
         self.note_offset = 12*octave + transpose + NOTE_OFFSET
-    
-    def _start_music():
+
+    def _start_music(self):
         pygame.mixer.music.load(os.path.join(BANK, self.play_on_success))
         pygame.mixer.music.play(fade_ms=fadein)
         self._music_running = True
 
-    def _next():
+    def _next(self):
         pianohat.set_led(self._current_note(), False)
         time.sleep(0.1)
         self.note += 1
@@ -142,17 +142,17 @@ class MelodyMode(PianoMode):
             self._start_music()
         pianohat.set_led(self._current_note(), True)
 
-    def _current_note():
+    def _current_note(self):
         return self.melody[self.note]
-    
-    def activate():
+
+    def activate(self):
         super().activate()
         # 'activate' is called when changing modes. We assume that we
         # want to reset the melody on switching modes.
         self.note = 0
         pianohat.set_led(self._current_note(), True)
 
-    def handle_note(channel, pressed):
+    def handle_note(self, channel, pressed):
         if not channel == self._current_note():
             return
         note_index = self.note_offset + channel
@@ -160,22 +160,17 @@ class MelodyMode(PianoMode):
             print('Playing Sound {}'.format(files[note_index]))
             samples[note_index].play(loops=0)
             self._next()
-    
-    def handle_octave_up(channel, pressed):
+
+    def handle_octave_up(self, channel, pressed):
         if self.play_on_success and pressed:
             pygame.mixer.music.unpause()
-    
-    def handle_octave_down(channel, pressed):
+
+    def handle_octave_down(self, channel, pressed):
         if self.play_on_success and pressed:
             if self._music_running:
                 pygame.mixer.music.pause()
             else:
                 pygame.mixer.music.stop()
-
-
-opmodes = [SimplePianoMode(),
-           MelodyMode(name='Alle meine Entchen', melody='alle_meine_entchen'),
-           MelodyMode(name='Zeiss-Sprung', melody='zeiss', easter_egg=play_zeiss_song)]
 
 
 pygame.mixer.pre_init(44100, -16, 1, 512)
@@ -184,6 +179,9 @@ pygame.mixer.set_num_channels(16)
 
 load_samples()
 signal.pause()
+opmodes = [SimplePianoMode(),
+           MelodyMode(name='Alle meine Entchen', melody='alle_meine_entchen'),
+           MelodyMode(name='Zeiss-Sprung', melody='zeiss', easter_egg='./sounds/mystery.mp3')]
 pianohat.on_instrument(handle_instrument)
 # opmode_index is 0 by default.
 opmodes[opmode_index].activate()
