@@ -202,7 +202,7 @@ turn_off_leds()
 load_samples()
 opmodes = [SimplePianoMode(starting_octave=4),
            MelodyMode(name='Alle meine Entchen', melody='alle_meine_entchen'),
-           MelodyMode(name='Zeiss-Sprung', melody='zeiss', transpose=6, easter_egg='mystery.ogg')]
+           MelodyMode(name='Zeiss-Sprung', melody='zeiss', transpose=6, easter_egg='mysterious.ogg')]
 # Register instrument button handling as this is a global key, independent of the mode class.
 pianohat.on_instrument(handle_instrument)
 # opmode_index is 0 by default.
